@@ -27,6 +27,7 @@ import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.CallManager;
+import com.android.internal.telephony.gsm.SuppServiceNotification;
 
 import android.app.ActivityManagerNative;
 import android.content.Context;
@@ -146,6 +147,8 @@ public class CallNotifier extends Handler
     private static final int EVENT_OTA_PROVISION_CHANGE = 26;
     private static final int CDMA_CALL_WAITING_REJECT = 27;
 
+    private static final int SUPP_SERVICE_NOTIFY = 34;
+
     // Emergency call related defines:
     private static final int EMERGENCY_TONE_OFF = 0;
     private static final int EMERGENCY_TONE_ALERT = 1;
@@ -161,6 +164,8 @@ public class CallNotifier extends Handler
 
     // ToneGenerator instance for playing SignalInfo tones
     private ToneGenerator mSignalInfoToneGenerator;
+
+    private static SuppServiceNotification suppSvcNotification;
 
     // The tone volume relative to other sounds in the stream SignalInfo
     private static final int TONE_RELATIVE_VOLUME_SIGNALINFO = 80;
@@ -360,9 +365,25 @@ public class CallNotifier extends Handler
                 onResendMute();
                 break;
 
+            case SUPP_SERVICE_NOTIFY:
+                if (DBG) log("Received Supplementary Notification");
+
+                if (msg.obj != null && ((AsyncResult) msg.obj).result != null) {
+                    suppSvcNotification = (SuppServiceNotification)((AsyncResult) msg.obj).result;
+                }
+                break;
+
             default:
                 // super.handleMessage(msg);
         }
+    }
+
+    public static SuppServiceNotification getSuppSvcNotification() {
+        return suppSvcNotification;
+    }
+
+    public static void clearSuppSvcNotification() {
+        suppSvcNotification = null;
     }
 
     PhoneStateListener mPhoneStateListener = new PhoneStateListener() {
@@ -864,6 +885,7 @@ public class CallNotifier extends Handler
         mCM.unregisterForCdmaOtaStatusChange(this);
         mCM.unregisterForRingbackTone(this);
         mCM.unregisterForResendIncallMute(this);
+        mCM.unregisterForSuppServiceNotification(this);
 
         // Release the ToneGenerator used for playing SignalInfo and CallWaiting
         if (mSignalInfoToneGenerator != null) {
@@ -897,6 +919,7 @@ public class CallNotifier extends Handler
         mCM.registerForInCallVoicePrivacyOff(this, PHONE_ENHANCED_VP_OFF, null);
         mCM.registerForRingbackTone(this, PHONE_RINGBACK_TONE, null);
         mCM.registerForResendIncallMute(this, PHONE_RESEND_MUTE, null);
+        mCM.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
     }
 
     /**
