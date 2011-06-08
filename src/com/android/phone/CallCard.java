@@ -682,7 +682,12 @@ public class CallCard extends FrameLayout
             } else if (PhoneApp.getInstance().notifier.getIsCdmaRedialCall()) {
                 callStateLabel = context.getString(R.string.card_title_redialing);
             }
+        } else if (phoneType == Phone.PHONE_TYPE_GSM) {
+            if (PhoneApp.getInstance().notifier.isCallHeldRemotely(call)) {
+                callStateLabel = context.getString(R.string.card_title_waiting_call);
+            }
         }
+
         if (PhoneUtils.isPhoneInEcm(phone)) {
             // In emergency callback mode (ECM), use a special label
             // that shows your own phone number.
@@ -1403,6 +1408,10 @@ public class CallCard extends FrameLayout
             //   mCallTypeLabel.setCompoundDrawablesWithIntrinsicBounds(
             //           callTypeSpecificBadge, null, null, null);
             //   mCallTypeLabel.setCompoundDrawablePadding((int) (mDensity * 6));
+        } else if (call != null && mApplication.notifier.isCallForwarded(call)) {
+            mCallTypeLabel.setVisibility(View.VISIBLE);
+            mCallTypeLabel.setText(R.string.incall_call_type_label_forwarded);
+            mCallTypeLabel.setTextColor(mTextColorDefaultSecondary);
         } else {
             mCallTypeLabel.setVisibility(View.GONE);
         }
