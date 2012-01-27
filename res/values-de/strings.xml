@@ -58,6 +58,26 @@
     <string name="callFailed_unobtainable_number" msgid="7886274717456712105">"Ungültige Nummer"</string>
     <string name="confCall" msgid="1904840547188336828">"Telefonkonferenz"</string>
     <string name="call_lost" msgid="317670617901479594">"Anruf ist verloren gegangen."</string>
+    <string name="callUnanswered_forwarded">Anruf wurde nicht beantwortet und weitergeleitet</string>
+    <string name="card_title_unconditionalCF">Dauerhafte Anrufweiterleitung ist aktiviert</string>
+    <string name="card_title_conditionalCF">Bedingte Anrufweiterleitung ist aktiviert</string>
+    <string name="card_title_MOcall_forwarding">Anruf wird weitergeleitet</string>
+    <string name="card_title_calliswaiting">Gegenseite ist besetzt, Anruf wartet</string>
+    <string name="card_title_cugcall">Anruf in geschlossener Benutzergruppe</string>
+    <string name="card_title_outgoing_barred">Ausgehende Anrufe sind gesperrt</string>
+    <string name="card_title_incoming_barred">Eingehende Anrufe sind bei der Gegenseite gesperrt</string>
+    <string name="card_title_clir_suppression_rejected">Unterdrückung der ausgehenden Rufnummer wurde abgewiesen</string>
+    <string name="card_title_call_deflected">Anruf wird von der Gegenseite weitergeleitet</string>
+    <string name="card_title_MTcall_forwarding">Eingehender Anruf wird weitergeleitet</string>
+    <string name="card_title_forwarded_MTcall">Anruf wurde weitergeleitet</string>
+    <string name="card_title_callonhold">Anruf wird gehalten</string>
+    <string name="card_title_callretrieved">Anruf wurde wieder aufgenommen</string>
+    <string name="card_title_multipartycall">Telefonkonferenz</string>
+    <string name="card_title_callonhold_released">Gehaltener Anruf wurde beendet</string>
+    <string name="card_title_forwardcheckreceived">Anruf wurde weitergeleitet</string>
+    <string name="card_title_callconnectingect">Anruf wird in Vermittlungsstelle verbunden</string>
+    <string name="card_title_callconnectedect">Anruf wurde in Vermittlungsstelle verbunden</string>
+    <string name="card_title_deflectedcall">Anruf wurde von der Gegenseite weitergeleitet</string>
     <string name="retry" msgid="8462986804300767852">"Wiederholen"</string>
     <string name="call_lost_title" msgid="6696949678847938515">"Anruf verloren"</string>
     <string name="mmiStarted" msgid="6347869857061147003">"MMI-Code gestartet"</string>
