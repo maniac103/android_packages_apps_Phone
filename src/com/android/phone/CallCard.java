@@ -631,8 +631,7 @@ public class CallCard extends FrameLayout
         // need to be set.)
 
         String cardTitle;
-
-        String callForwardTxt = getSuppSvcNotification();
+        String callForwardText = getSuppSvcNotificationText();
 
         int phoneType = phone.getPhoneType();
         if (phoneType == Phone.PHONE_TYPE_CDMA) {
@@ -690,8 +689,8 @@ public class CallCard extends FrameLayout
                         setUpperTitle(cardTitle, mTextColorDefaultPrimary, state);
                     } else {  // state == Call.State.ACTIVE
                         // Display the title for call forwarding notifications.
-                        if (!(callForwardTxt.equals("")) && state == Call.State.ACTIVE) {
-                            setUpperTitle(callForwardTxt, mTextColorDefaultPrimary, state);
+                        if (callForwardText != null && state == Call.State.ACTIVE) {
+                            setUpperTitle(callForwardText, mTextColorDefaultPrimary, state);
                         } else {
                             // Normal "ongoing call" state; don't use any "title" at all.
                             clearUpperTitle();
@@ -754,74 +753,38 @@ public class CallCard extends FrameLayout
                 // If Call forwarding notification is set, display the call
                 // forwarding text in elapsed time widget else don't show
                 // the elapsed time.
-                if (callForwardTxt.equals("")) {
+                if (callForwardText == null) {
                     mElapsedTime.setVisibility(View.INVISIBLE);
                 } else {
                     mElapsedTime.setVisibility(View.VISIBLE);
-                    mElapsedTime.setText(callForwardTxt);
+                    mElapsedTime.setText(callForwardText);
                 }
                 break;
         }
     }
 
-    private String getSuppSvcNotification() {
-        SuppServiceNotification suppSvcNotification = CallNotifier.getSuppSvcNotification();
+    private String getSuppSvcNotificationText() {
+        SuppServiceNotification notification = CallNotifier.getSuppSvcNotification();
 
-        String callForwardTxt = "";
-        if (suppSvcNotification != null) {
-            switch (suppSvcNotification.notificationType) {
-                // The Notification is for MO call
-                case 0:
-                    switch (suppSvcNotification.code) {
-                        case SuppServiceNotification.MO_CODE_UNCONDITIONAL_CF_ACTIVE :
-                            // This message is displayed when an outgoing call is made
-                            // and unconditional forwarding is enabled.
-                            callForwardTxt = getContext().getString(R.string.card_title_unconditionalCF);
-                            break;
-
-                        case SuppServiceNotification.MO_CODE_SOME_CF_ACTIVE:
-                            // This message is displayed when an outgoing call is made
-                            // and conditional forwarding is enabled.
-                            callForwardTxt = getContext().getString(R.string.card_title_conditionalCF);
-                            break;
-
-                        case SuppServiceNotification.MO_CODE_CALL_FORWARDED:
-                            //This message is displayed on A when the outgoing call actually gets forwarded to C
-                            callForwardTxt = getContext().getString(R.string.card_title_MOcall_forwarding);
-                            break;
-
-                        default:
-                            log("Received unsupported MO SS Notification :" + suppSvcNotification.code);
-                            break;
-                    }
-                    break;
-
-                // The Notification is for MT call
-                case 1:
-                    switch (suppSvcNotification.code) {
-                        case SuppServiceNotification.MT_CODE_FORWARDED_CALL:
-                            //This message is displayed on C when the incoming call is forwarded from B
-                            callForwardTxt = getContext().getString(R.string.card_title_forwarded_MTcall);
-                            break;
-
-                        case SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED:
-                            // This message is displayed on B when it is busy and the incoming call gets forwarded to C
-                            callForwardTxt = getContext().getString(R.string.card_title_MTcall_forwarding);
-                            break;
-
-                        default :
-                            log("Received unsupported MT SS Notification :" + suppSvcNotification.code);
-                            break;
-                    }
-                    break;
-
-                default:
-                    Log.e(LOG_TAG, "Received invalid Notification Type :" + suppSvcNotification.notificationType);
-                    break;
-            }
+        if (notification == null) {
+            return null;
         }
-        return callForwardTxt;
+
+        if (notification.notificationType == 0 /* MO call */
+                && notification.code == SuppServiceNotification.MO_CODE_CALL_FORWARDED) {
+            //This message is displayed on A when the outgoing call actually gets forwarded to C
+            return getContext().getString(R.string.card_title_MOcall_forwarding);
+        }
+
+        if (notification.notificationType == 1 /* MT call */
+                && notification.code == SuppServiceNotification.MT_CODE_FORWARDED_CALL) {
+            //This message is displayed on C when the incoming call is forwarded from B
+            return getContext().getString(R.string.card_title_forwarded_MTcall);
+        }
+
+        return null;
     }
+
     /**
      * Updates mElapsedTime based on the specified number of seconds.
      * A timeElapsed value of zero means to not show an elapsed time at all.
