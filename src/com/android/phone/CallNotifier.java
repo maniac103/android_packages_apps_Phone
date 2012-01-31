@@ -372,6 +372,7 @@ public class CallNotifier extends Handler
                 if (msg.obj != null && ((AsyncResult) msg.obj).result != null) {
                     suppSvcNotification = (SuppServiceNotification)((AsyncResult) msg.obj).result;
                     if (suppSvcNotification != null) {
+                        if (DBG) log("SS Notification: " + suppSvcNotification);
                         showSuppSvcNotificationToast(suppSvcNotification);
                     }
                 }
