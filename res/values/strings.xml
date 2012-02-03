@@ -918,6 +918,8 @@
     <string name="card_title_conf_call">Conference call</string>
     <!-- In-call screen: status label for an incoming call -->
     <string name="card_title_incoming_call">Incoming call</string>
+    <!-- In-call screen: status label for an incoming forwarded call -->
+    <string name="card_title_incoming_forwarded_call">Forwarded call</string>
     <!-- In-call screen: status label for an cdma call waiting -->
     <string name="card_title_cdma_call_waiting">Cdma callwaiting </string>
     <!-- In-call screen: status label displayed briefly after a call ends -->

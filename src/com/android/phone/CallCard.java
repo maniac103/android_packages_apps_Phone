@@ -631,8 +631,6 @@ public class CallCard extends FrameLayout
         // need to be set.)
 
         String cardTitle;
-        String callForwardText = getSuppSvcNotificationText();
-
         int phoneType = phone.getPhoneType();
         if (phoneType == Phone.PHONE_TYPE_CDMA) {
             if (!PhoneApp.getInstance().notifier.getIsCdmaRedialCall()) {
@@ -688,13 +686,8 @@ public class CallCard extends FrameLayout
                         // Display the brief "Hanging up" indication.
                         setUpperTitle(cardTitle, mTextColorDefaultPrimary, state);
                     } else {  // state == Call.State.ACTIVE
-                        // Display the title for call forwarding notifications.
-                        if (callForwardText != null && state == Call.State.ACTIVE) {
-                            setUpperTitle(callForwardText, mTextColorDefaultPrimary, state);
-                        } else {
-                            // Normal "ongoing call" state; don't use any "title" at all.
-                            clearUpperTitle();
-                        }
+                        // Normal "ongoing call" state; don't use any "title" at all.
+                        clearUpperTitle();
                     }
                 }
 
@@ -750,39 +743,19 @@ public class CallCard extends FrameLayout
             default:
                 // All other states (DIALING, INCOMING, etc.) use the "upper title":
                 setUpperTitle(cardTitle, mTextColorDefaultPrimary, state);
-                // If Call forwarding notification is set, display the call
-                // forwarding text in elapsed time widget else don't show
-                // the elapsed time.
-                if (callForwardText == null) {
-                    mElapsedTime.setVisibility(View.INVISIBLE);
-                } else {
-                    mElapsedTime.setVisibility(View.VISIBLE);
-                    mElapsedTime.setText(callForwardText);
-                }
+
+                // ...and we don't show the elapsed time.
+                mElapsedTime.setVisibility(View.INVISIBLE);
                 break;
         }
     }
 
-    private String getSuppSvcNotificationText() {
+    private boolean isCallForwarded() {
         SuppServiceNotification notification = CallNotifier.getSuppSvcNotification();
 
-        if (notification == null) {
-            return null;
-        }
-
-        if (notification.notificationType == 0 /* MO call */
-                && notification.code == SuppServiceNotification.MO_CODE_CALL_FORWARDED) {
-            //This message is displayed on A when the outgoing call actually gets forwarded to C
-            return getContext().getString(R.string.card_title_MOcall_forwarding);
-        }
-
-        if (notification.notificationType == 1 /* MT call */
-                && notification.code == SuppServiceNotification.MT_CODE_FORWARDED_CALL) {
-            //This message is displayed on C when the incoming call is forwarded from B
-            return getContext().getString(R.string.card_title_forwarded_MTcall);
-        }
-
-        return null;
+        return notification != null &&
+               notification.notificationType == 1 && /* MT call */
+               notification.code == SuppServiceNotification.MT_CODE_FORWARDED_CALL;
     }
 
     /**
@@ -846,7 +819,11 @@ public class CallCard extends FrameLayout
 
             case INCOMING:
             case WAITING:
-                retVal = context.getString(R.string.card_title_incoming_call);
+                if (isCallForwarded()) {
+                    retVal = context.getString(R.string.card_title_incoming_forwarded_call);
+                } else {
+                    retVal = context.getString(R.string.card_title_incoming_call);
+                }
                 break;
 
             case DISCONNECTING:

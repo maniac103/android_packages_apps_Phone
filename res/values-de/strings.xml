@@ -470,6 +470,7 @@
     <string name="card_title_in_progress" msgid="8603765629781648862">"Aktueller Anruf"</string>
     <string name="card_title_conf_call" msgid="1162980346189744501">"Telefonkonferenz"</string>
     <string name="card_title_incoming_call" msgid="7364539451234646909">"Eingehender Anruf"</string>
+    <string name="card_title_incoming_forwarded_call">Weitergeleiteter Anruf"</string>
     <string name="card_title_cdma_call_waiting" msgid="4532445524811272644">"CDMA-Anruf wartet"</string>
     <string name="card_title_call_ended" msgid="5544730338889702298">"Anruf beendet"</string>
     <string name="card_title_on_hold" msgid="821463117892339942">"Gehaltener Anruf"</string>

@@ -407,7 +407,8 @@ public class CallNotifier extends Handler
                     text = mApplication.getString(R.string.card_title_conditionalCF);
                     break;
                 case SuppServiceNotification.MO_CODE_CALL_FORWARDED:
-                    // handled in CallCard.java
+                    //This message is displayed on A when the outgoing call actually gets forwarded to C
+                    text = mApplication.getString(R.string.card_title_MOcall_forwarding);
                     break;
                 case SuppServiceNotification.MO_CODE_CALL_IS_WAITING:
                     //This message is displayed on A when the B is busy on another call
