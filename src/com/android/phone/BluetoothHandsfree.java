@@ -1976,7 +1976,7 @@ public class BluetoothHandsfree {
                         operatorName = operatorName.substring(0, 16);
                     }
                     return new AtCommandResult(
-                            "+COPS: 0,0,\"" + operatorName + "\"");
+                            String.format("+COPS: 0,0,\"%-16s\"", operatorName));
                 } else {
                     return new AtCommandResult(
                             "+COPS: 0,0,\"UNKNOWN\",0");
