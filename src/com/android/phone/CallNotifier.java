@@ -57,6 +57,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorEvent;
 import android.hardware.Sensor;
 
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Phone app module that listens for phone state changes and various other
@@ -163,10 +165,12 @@ public class CallNotifier extends Handler
     private boolean mSilentRingerRequested;
     private boolean mHasRingingCall;
 
+    private boolean mNextGsmCallIsForwarded;
+    private Set<Call> mForwardedCalls;
+    private Set<Call> mWaitingCalls;
+
     // ToneGenerator instance for playing SignalInfo tones
     private ToneGenerator mSignalInfoToneGenerator;
-
-    private static SuppServiceNotification suppSvcNotification;
 
     // The tone volume relative to other sounds in the stream SignalInfo
     private static final int TONE_RELATIVE_VOLUME_SIGNALINFO = 80;
@@ -203,6 +207,9 @@ public class CallNotifier extends Handler
         mCM = app.mCM;
         mCallLog = callLog;
 
+        mForwardedCalls = new HashSet<Call>();
+        mWaitingCalls = new HashSet<Call>();
+
         mAudioManager = (AudioManager) mApplication.getSystemService(Context.AUDIO_SERVICE);
 
         mPowerManager = (PowerManager) mApplication.getSystemService(Context.POWER_SERVICE);
@@ -230,6 +237,14 @@ public class CallNotifier extends Handler
         telephonyManager.listen(mPhoneStateListener,
                 PhoneStateListener.LISTEN_MESSAGE_WAITING_INDICATOR
                 | PhoneStateListener.LISTEN_CALL_FORWARDING_INDICATOR);
+    }
+
+    public boolean isCallForwarded(Call call) {
+        return mForwardedCalls.contains(call);
+    }
+
+    public boolean isCallHeldRemotely(Call call) {
+        return mWaitingCalls.contains(call);
     }
 
     @Override
@@ -368,134 +383,11 @@ public class CallNotifier extends Handler
 
             case SUPP_SERVICE_NOTIFY:
                 if (DBG) log("Received Supplementary Notification");
-
-                if (msg.obj != null && ((AsyncResult) msg.obj).result != null) {
-                    suppSvcNotification = (SuppServiceNotification)((AsyncResult) msg.obj).result;
-                    if (suppSvcNotification != null) {
-                        if (DBG) log("SS Notification: " + suppSvcNotification);
-                        showSuppSvcNotificationToast(suppSvcNotification);
-                    }
-                }
+                onSuppServiceNotification((AsyncResult) msg.obj);
                 break;
 
             default:
                 // super.handleMessage(msg);
-        }
-    }
-
-    public static SuppServiceNotification getSuppSvcNotification() {
-        return suppSvcNotification;
-    }
-
-    public static void clearSuppSvcNotification() {
-        suppSvcNotification = null;
-    }
-
-    private void showSuppSvcNotificationToast(SuppServiceNotification notification) {
-        String text = null;
-
-        if (notification.notificationType == 0 /* MO call */) {
-            switch (notification.code) {
-                case SuppServiceNotification.MO_CODE_UNCONDITIONAL_CF_ACTIVE :
-                    // This message is displayed when an outgoing call is made
-                    // and unconditional forwarding is enabled.
-                    text = mApplication.getString(R.string.card_title_unconditionalCF);
-                    break;
-                case SuppServiceNotification.MO_CODE_SOME_CF_ACTIVE:
-                    // This message is displayed when an outgoing call is made
-                    // and conditional forwarding is enabled.
-                    text = mApplication.getString(R.string.card_title_conditionalCF);
-                    break;
-                case SuppServiceNotification.MO_CODE_CALL_FORWARDED:
-                    //This message is displayed on A when the outgoing call actually gets forwarded to C
-                    text = mApplication.getString(R.string.card_title_MOcall_forwarding);
-                    break;
-                case SuppServiceNotification.MO_CODE_CALL_IS_WAITING:
-                    //This message is displayed on A when the B is busy on another call
-                    //and Call waiting is enabled on B
-                    text = mApplication.getString(R.string.card_title_calliswaiting);
-                    break;
-                case SuppServiceNotification.MO_CODE_CUG_CALL:
-                    //This message is displayed on A, when A makes call to B, both A & B
-                    //belong to a CUG group
-                    text = mApplication.getString(R.string.card_title_cugcall);
-                    break;
-                case SuppServiceNotification.MO_CODE_OUTGOING_CALLS_BARRED:
-                    //This message is displayed on A when outging is barred on A
-                    text = mApplication.getString(R.string.card_title_outgoing_barred);
-                    break;
-                case SuppServiceNotification.MO_CODE_INCOMING_CALLS_BARRED:
-                    //This message is displayed on A, when A is calling B & incoming is barred on B
-                    text = mApplication.getString(R.string.card_title_incoming_barred);
-                    break;
-                case SuppServiceNotification.MO_CODE_CLIR_SUPPRESSION_REJECTED:
-                    //This message is displayed on A, when CLIR suppression is rejected
-                    text = mApplication.getString(R.string.card_title_clir_suppression_rejected);
-                    break;
-                case SuppServiceNotification.MO_CODE_CALL_DEFLECTED:
-                    //This message is displayed on A, when the outgoing call gets deflected to C from B
-                    text = mApplication.getString(R.string.card_title_call_deflected);
-                    break;
-                default:
-                    log("Received unsupported MO SS Notification :" + notification.code);
-                    break;
-            }
-        } else if (notification.notificationType == 1 /* MT call */) {
-            switch (notification.code) {
-                case SuppServiceNotification.MT_CODE_FORWARDED_CALL:
-                    // handled in CallCard.java
-                    break;
-                case SuppServiceNotification.MT_CODE_CUG_CALL:
-                    //This message is displayed on B, when A makes call to B, both A & B
-                    //belong to a CUG group
-                    text = mApplication.getString(R.string.card_title_cugcall);
-                    break;
-               case SuppServiceNotification.MT_CODE_CALL_ON_HOLD:
-                   //This message is displayed on B,when A makes call to B & puts it on hold
-                   text = mApplication.getString(R.string.card_title_callonhold);
-                   break;
-               case SuppServiceNotification.MT_CODE_CALL_RETRIEVED:
-                   //This message is displayed on B,when A makes call to B, puts it on hold & retrives it back.
-                   text = mApplication.getString(R.string.card_title_callretrieved);
-                   break;
-               case SuppServiceNotification.MT_CODE_MULTI_PARTY_CALL:
-                   //This message is displayed on B when the the call is changed as multiparty
-                   text = mApplication.getString(R.string.card_title_multipartycall);
-                   break;
-               case SuppServiceNotification.MT_CODE_ON_HOLD_CALL_RELEASED:
-                   //This message is displayed on B, when A makes call to B, puts it on hold & then releases it.
-                   text = mApplication.getString(R.string.card_title_callonhold_released);
-                   break;
-               case SuppServiceNotification.MT_CODE_FORWARD_CHECK_RECEIVED:
-                   //This message is displayed on C when the incoming call is forwarded from B
-                   text = mApplication.getString(R.string.card_title_forwardcheckreceived);
-                   break;
-               case SuppServiceNotification.MT_CODE_CALL_CONNECTING_ECT:
-                   //This message is displayed on B,when Call is connecting through Explicit Call Transfer
-                   text = mApplication.getString(R.string.card_title_callconnectingect);
-                   break;
-               case SuppServiceNotification.MT_CODE_CALL_CONNECTED_ECT:
-                   //This message is displayed on B,when Call is connected through Explicit Call Transfer
-                   text = mApplication.getString(R.string.card_title_callconnectedect);
-                   break;
-               case SuppServiceNotification.MT_CODE_DEFLECTED_CALL:
-                   //This message is displayed on B when the incoming call is deflected call
-                   text = mApplication.getString(R.string.card_title_deflectedcall);
-                   break;
-               case SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED:
-                   // This message is displayed on B when it is busy and the incoming call gets forwarded to C
-                   text = mApplication.getString(R.string.card_title_MTcall_forwarding);
-                   break;
-               default:
-                   log("Received unsupported MT SS Notification :" + notification.code);
-                   break;
-            }
-        } else {
-            Log.e(LOG_TAG, "Received invalid Notification Type :" + notification.notificationType);
-        }
-
-        if (text != null) {
-            Toast.makeText(mApplication, text, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -516,6 +408,11 @@ public class CallNotifier extends Handler
         if (DBG) log("onNewRingingConnection(): " + c);
         Call ringing = c.getCall();
         Phone phone = ringing.getPhone();
+
+        if (phone.getPhoneType() == Phone.PHONE_TYPE_GSM && mNextGsmCallIsForwarded) {
+            mForwardedCalls.add(ringing);
+            mNextGsmCallIsForwarded = false;
+        }
 
         // Incoming calls are totally ignored if the device isn't provisioned yet
         boolean provisioned = Settings.Secure.getInt(mApplication.getContentResolver(),
@@ -1093,6 +990,11 @@ public class CallNotifier extends Handler
                 + ", date = " + c.getCreateTime());
         }
 
+        if (c != null) {
+            Call call = c.getCall();
+            mForwardedCalls.remove(call);
+            mWaitingCalls.remove(call);
+        }
 
         mCdmaVoicePrivacyState = false;
         int autoretrySetting = 0;
@@ -2132,6 +2034,111 @@ public class CallNotifier extends Handler
         boolean muteState = PhoneUtils.getMute();
         PhoneUtils.setMute(!muteState);
         PhoneUtils.setMute(muteState);
+    }
+
+    private void onSuppServiceNotification(AsyncResult r) {
+        SuppServiceNotification notification = (SuppServiceNotification) r.result;
+
+        if (DBG) log("SS Notification: " + notification);
+
+        if (notification.notificationType == SuppServiceNotification.NOTIFICATION_TYPE_MT) {
+            if (notification.code == SuppServiceNotification.MT_CODE_FORWARDED_CALL
+                    || notification.code == SuppServiceNotification.MT_CODE_DEFLECTED_CALL) {
+                Call ringing = PhoneUtils.getGsmPhone(mCM).getRingingCall();
+                if (ringing.getState().isRinging()) {
+                    mForwardedCalls.add(ringing);
+                } else {
+                    mNextGsmCallIsForwarded = true;
+                }
+            }
+
+            if (notification.code == SuppServiceNotification.MT_CODE_CALL_ON_HOLD) {
+                Call call = PhoneUtils.getCurrentCall(PhoneUtils.getGsmPhone(mCM));
+                if (call.getState() == Call.State.ACTIVE) {
+                    mWaitingCalls.add(call);
+                }
+            } else if (notification.code == SuppServiceNotification.MT_CODE_CALL_RETRIEVED) {
+                Call call = PhoneUtils.getCurrentCall(PhoneUtils.getGsmPhone(mCM));
+                mWaitingCalls.remove(call);
+            }
+        }
+
+        /* show a toast for transient notifications */
+        int toastResId = getSuppServiceToastTextResId(notification);
+        if (toastResId >= 0) {
+            Toast.makeText(mApplication, mApplication.getString(toastResId), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private int getSuppServiceToastTextResId(SuppServiceNotification notification) {
+        if (notification.notificationType == SuppServiceNotification.NOTIFICATION_TYPE_MO) {
+            switch (notification.code) {
+                case SuppServiceNotification.MO_CODE_UNCONDITIONAL_CF_ACTIVE :
+                    // This message is displayed when an outgoing call is made
+                    // and unconditional forwarding is enabled.
+                    return R.string.call_notif_unconditionalCF;
+                case SuppServiceNotification.MO_CODE_SOME_CF_ACTIVE:
+                    // This message is displayed when an outgoing call is made
+                    // and conditional forwarding is enabled.
+                    return R.string.call_notif_conditionalCF;
+                case SuppServiceNotification.MO_CODE_CALL_FORWARDED:
+                    //This message is displayed on A when the outgoing call actually gets forwarded to C
+                    return R.string.call_notif_MOcall_forwarding;
+                case SuppServiceNotification.MO_CODE_CALL_IS_WAITING:
+                    //This message is displayed on A when the B is busy on another call
+                    //and Call waiting is enabled on B
+                    return R.string.call_notif_calliswaiting;
+                case SuppServiceNotification.MO_CODE_CUG_CALL:
+                    //This message is displayed on A, when A makes call to B, both A & B
+                    //belong to a CUG group
+                    return R.string.call_notif_cugcall;
+                case SuppServiceNotification.MO_CODE_OUTGOING_CALLS_BARRED:
+                    //This message is displayed on A when outging is barred on A
+                    return R.string.call_notif_outgoing_barred;
+                case SuppServiceNotification.MO_CODE_INCOMING_CALLS_BARRED:
+                    //This message is displayed on A, when A is calling B & incoming is barred on B
+                    return R.string.call_notif_incoming_barred;
+                case SuppServiceNotification.MO_CODE_CLIR_SUPPRESSION_REJECTED:
+                    //This message is displayed on A, when CLIR suppression is rejected
+                    return R.string.call_notif_clir_suppression_rejected;
+                case SuppServiceNotification.MO_CODE_CALL_DEFLECTED:
+                    //This message is displayed on A, when the outgoing call gets deflected to C from B
+                    return R.string.call_notif_call_deflected;
+            }
+        } else if (notification.notificationType == SuppServiceNotification.NOTIFICATION_TYPE_MT) {
+            switch (notification.code) {
+                case SuppServiceNotification.MT_CODE_CUG_CALL:
+                    //This message is displayed on B, when A makes call to B, both A & B
+                    //belong to a CUG group
+                    return R.string.call_notif_cugcall;
+               case SuppServiceNotification.MT_CODE_CALL_ON_HOLD:
+                   //This message is displayed on B,when A makes call to B & puts it on hold
+                   return R.string.call_notif_callonhold;
+               case SuppServiceNotification.MT_CODE_CALL_RETRIEVED:
+                   //This message is displayed on B,when A makes call to B, puts it on hold & retrives it back.
+                   return R.string.call_notif_callretrieved;
+               case SuppServiceNotification.MT_CODE_MULTI_PARTY_CALL:
+                   //This message is displayed on B when the the call is changed as multiparty
+                   return R.string.call_notif_multipartycall;
+               case SuppServiceNotification.MT_CODE_ON_HOLD_CALL_RELEASED:
+                   //This message is displayed on B, when A makes call to B, puts it on hold & then releases it.
+                   return R.string.call_notif_callonhold_released;
+               case SuppServiceNotification.MT_CODE_FORWARD_CHECK_RECEIVED:
+                   //This message is displayed on C when the incoming call is forwarded from B
+                   return R.string.call_notif_forwardcheckreceived;
+               case SuppServiceNotification.MT_CODE_CALL_CONNECTING_ECT:
+                   //This message is displayed on B,when Call is connecting through Explicit Call Transfer
+                   return R.string.call_notif_callconnectingect;
+               case SuppServiceNotification.MT_CODE_CALL_CONNECTED_ECT:
+                   //This message is displayed on B,when Call is connected through Explicit Call Transfer
+                   return R.string.call_notif_callconnectedect;
+               case SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED:
+                   // This message is displayed on B when it is busy and the incoming call gets forwarded to C
+                   return R.string.call_notif_MTcall_forwarding;
+            }
+        }
+
+        return -1;
     }
 
     /**

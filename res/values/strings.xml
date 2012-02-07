@@ -873,53 +873,14 @@
     <!-- In-call screen: status label for a re-dialing call -->
     <string name="card_title_redialing">Retrying</string>
 
-    <!-- In-call screen: status label for Unconditional Call Forwarding enabled  -->
-    <string name="card_title_unconditionalCF">Call Forward Unconditional is enabled</string>
-    <!-- In-call screen: status label for Conditional Call Forwarding enabled  -->
-    <string name="card_title_conditionalCF">Call Forward Conditional is enabled</string>
-    <!-- In-call screen: status label for a forwarded MO call  -->
-    <string name="card_title_MOcall_forwarding">Outgoing Forwarded Call</string>
-    <!-- In-call screen: status label when Call waiting is enabled on remote party  -->
-    <string name="card_title_calliswaiting">Call Waiting</string>
-    <!-- In-call screen: status label for MO call, when the caller & callee both belng to a CUG group -->
-    <string name="card_title_cugcall">CUG Call</string>
-    <!-- In-call screen: status label when MO calls are barred -->
-    <string name="card_title_outgoing_barred">Outgoing Calls Barred</string>
-    <!-- In-call screen: status label for MO calls, when incoming calls are barred at remote party -->
-    <string name="card_title_incoming_barred">Incoming Calls Barred</string>
-    <!-- In-call screen: status label for MO calls when CLIR Suppression is rejected -->
-    <string name="card_title_clir_suppression_rejected">CLIR Suppression Rejected</string>
-    <!-- In-call screen: status label when MO call gets deflected to another party -->
-    <string name="card_title_call_deflected">Call Deflected</string>
-    <!-- In-call screen: status label for incoming call being forwarded to other remote party  -->
-    <string name="card_title_MTcall_forwarding">Incoming Call is Forwarded</string>
-    <!-- In-call screen: status label for incoming call forwarded from other remote party -->
-    <string name="card_title_forwarded_MTcall">Forwarded Incoming Call</string>
-    <!-- In-call screen: status label for incoming call which is answered & then put on hold  -->
-    <string name="card_title_callonhold">Put on Hold</string>
-    <!-- In-call screen: status label for incoming call put on hold & then retreived back -->
-    <string name="card_title_callretrieved">Call Retreived</string>
-    <!-- In-call screen: status label for incoming call which is part of MultiParty Call -->
-    <string name="card_title_multipartycall">MultiParty Call</string>
-    <!-- In-call screen: status label for incoming call which is answered,put on hold & then released -->
-    <string name="card_title_callonhold_released">Call Released</string>
-    <!-- In-call screen: status label for incoming call forward check received -->
-    <string name="card_title_forwardcheckreceived">Forward Check Received</string>
-    <!-- In-call screen: status label for incoming call connecting through ECT -->
-    <string name="card_title_callconnectingect">Call Connecting ECT</string>
-    <!-- In-call screen: status label for incoming call connected through ECT -->
-    <string name="card_title_callconnectedect">Call Connected ECT</string>
-    <!-- In-call screen: status label for incoming call is a deflected call -->
-    <string name="card_title_deflectedcall">Deflected Call</string>
-
     <!-- In-call screen: status label for a call in progress -->
     <string name="card_title_in_progress">Current call</string>
     <!-- In-call screen: status label for a conference call -->
     <string name="card_title_conf_call">Conference call</string>
     <!-- In-call screen: status label for an incoming call -->
     <string name="card_title_incoming_call">Incoming call</string>
-    <!-- In-call screen: status label for an incoming forwarded call -->
-    <string name="card_title_incoming_forwarded_call">Forwarded call</string>
+    <!-- In-call screen: status label for a call that is held remotely  -->
+    <string name="card_title_waiting_call">Waiting call</string>
     <!-- In-call screen: status label for an cdma call waiting -->
     <string name="card_title_cdma_call_waiting">Cdma callwaiting </string>
     <!-- In-call screen: status label displayed briefly after a call ends -->
@@ -933,6 +894,42 @@
     <!-- In-call screen: special status label that shows your own phone
          number during emergency callback mode (ECM) [CHAR LIMIT=30] -->
     <string name="card_title_my_phone_number">My number is <xliff:g id="my_phone_number">%s</xliff:g></string>
+
+    <!-- Toasts for various transient network events -->
+    <!-- Toast text for Unconditional Call Forwarding enabled  -->
+    <string name="call_notif_unconditionalCF">Call Forward Unconditional is enabled</string>
+    <!-- Toast text for Conditional Call Forwarding enabled  -->
+    <string name="call_notif_conditionalCF">Call Forward Conditional is enabled</string>
+    <!-- Toast text for a forwarded MO call  -->
+    <string name="call_notif_MOcall_forwarding">Outgoing Forwarded Call</string>
+    <!-- In-call screen: status label when Call waiting is enabled on remote party  -->
+    <string name="call_notif_calliswaiting">Call Waiting</string>
+    <!-- Toast text for MO call, when the caller & callee both belng to a CUG group -->
+    <string name="call_notif_cugcall">CUG Call</string>
+    <!-- In-call screen: status label when MO calls are barred -->
+    <string name="call_notif_outgoing_barred">Outgoing Calls Barred</string>
+    <!-- Toast text for MO calls, when incoming calls are barred at remote party -->
+    <string name="call_notif_incoming_barred">Incoming Calls Barred</string>
+    <!-- Toast text for MO calls when CLIR Suppression is rejected -->
+    <string name="call_notif_clir_suppression_rejected">CLIR Suppression Rejected</string>
+    <!-- In-call screen: status label when MO call gets deflected to another party -->
+    <string name="call_notif_call_deflected">Call Deflected</string>
+    <!-- Toast text for incoming call being forwarded to other remote party  -->
+    <string name="call_notif_MTcall_forwarding">Incoming Call is Forwarded</string>
+    <!-- Toast text for incoming call which is answered & then put on hold  -->
+    <string name="call_notif_callonhold">Put on Hold</string>
+    <!-- Toast text for incoming call put on hold & then retreived back -->
+    <string name="call_notif_callretrieved">Call Retreived</string>
+    <!-- Toast text for incoming call which is part of MultiParty Call -->
+    <string name="call_notif_multipartycall">MultiParty Call</string>
+    <!-- Toast text for incoming call which is answered,put on hold & then released -->
+    <string name="call_notif_callonhold_released">Call Released</string>
+    <!-- Toast text for incoming call forward check received -->
+    <string name="call_notif_forwardcheckreceived">Forward Check Received</string>
+    <!-- Toast text for incoming call connecting through ECT -->
+    <string name="call_notif_callconnectingect">Call Connecting ECT</string>
+    <!-- Toast text for incoming call connected through ECT -->
+    <string name="call_notif_callconnectedect">Call Connected ECT</string>
 
     <!-- Notification strings -->
     <!-- Missed call notification label, used when there's exactly one missed call -->
@@ -1000,6 +997,8 @@
 
     <!-- In-call screen: "call type" indication for a SIP call [CHAR LIMIT=30]  -->
     <string name="incall_call_type_label_sip">Internet call</string>
+    <!-- In-call screen: "call type" indication for a forwarded call [CHAR LIMIT=30] -->
+    <string name="incall_call_type_label_forwarded">Forwarded call</string>
 
     <!-- Dialog title for the "radio enable" UI for emergency calls -->
     <string name="emergency_enable_radio_dialog_title">Emergency call</string>

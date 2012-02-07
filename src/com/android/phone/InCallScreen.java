@@ -173,6 +173,7 @@ public class InCallScreen extends Activity
     private static final int EVENT_PAUSE_DIALOG_COMPLETE = 120;
     private static final int EVENT_HIDE_PROVIDER_OVERLAY = 121;  // Time to remove the overlay.
     private static final int REQUEST_UPDATE_TOUCH_UI = 122;
+    private static final int SUPP_SERVICE_NOTIFY = 123;
 
     //following constants are used for OTA Call
     public static final String ACTION_SHOW_ACTIVATION =
@@ -236,6 +237,7 @@ public class InCallScreen extends Activity
 
     private boolean mRegisteredForPhoneStates;
     private boolean mNeedShowCallLostDialog;
+    private boolean mNeedShowAdditionalCallForwardedDialog;
 
     private CallManager mCM;
 
@@ -347,6 +349,10 @@ public class InCallScreen extends Activity
             switch (msg.what) {
                 case SUPP_SERVICE_FAILED:
                     onSuppServiceFailed((AsyncResult) msg.obj);
+                    break;
+
+                case SUPP_SERVICE_NOTIFY:
+                    onSuppServiceNotification((AsyncResult) msg.obj);
                     break;
 
                 case PHONE_STATE_CHANGED:
@@ -1135,6 +1141,7 @@ public class InCallScreen extends Activity
             mCM.registerForPostDialCharacter(mHandler, POST_ON_DIAL_CHARS, null);
             mCM.registerForSuppServiceFailed(mHandler, SUPP_SERVICE_FAILED, null);
             mCM.registerForCdmaOtaStatusChange(mHandler, EVENT_OTA_PROVISION_CHANGE, null);
+            mCM.registerForSuppServiceNotification(mHandler, SUPP_SERVICE_NOTIFY, null);
             mRegisteredForPhoneStates = true;
         }
     }
@@ -1148,6 +1155,7 @@ public class InCallScreen extends Activity
         mCM.unregisterForSuppServiceFailed(mHandler);
         mCM.unregisterForPostDialCharacter(mHandler);
         mCM.unregisterForCdmaOtaStatusChange(mHandler);
+        mCM.unregisterForSuppServiceNotification(mHandler);
         mRegisteredForPhoneStates = false;
     }
 
@@ -1756,6 +1764,22 @@ public class InCallScreen extends Activity
         mSuppServiceFailureDialog.show();
     }
 
+    private void onSuppServiceNotification(AsyncResult r) {
+        SuppServiceNotification notification = (SuppServiceNotification) r.result;
+
+        if (notification.notificationType == SuppServiceNotification.NOTIFICATION_TYPE_MT) {
+            if (notification.code == SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED) {
+                if (!PhoneUtils.getCurrentCall(mPhone).isIdle()) {
+                    mNeedShowAdditionalCallForwardedDialog = true;
+                }
+            }
+        }
+
+        if (mIsForegroundActivity) {
+            updateScreen();
+        }
+    }
+
     /**
      * Something has changed in the phone's state.  Update the UI.
      */
@@ -1837,17 +1861,9 @@ public class InCallScreen extends Activity
         // with a dialog instead of going through the normal disconnect
         // routine.
         if (cause == Connection.DisconnectCause.INCOMING_MISSED) {
-           // If the network sends SVC Notification then this dialog will be displayed
-           // in case of B when the incoming call at B is not answered and gets forwarded
-           // to C
-            SuppServiceNotification suppSvcNotification = CallNotifier.getSuppSvcNotification();
-            if (suppSvcNotification != null) {
-                if (suppSvcNotification.notificationType == 1 && suppSvcNotification.code
-                        == SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED) {
-                    showGenericErrorDialog(R.string.callUnanswered_forwarded, false);
-                    CallNotifier.clearSuppSvcNotification();
-                    return;
-                }
+            if (mNeedShowAdditionalCallForwardedDialog) {
+                showGenericErrorDialog(R.string.callUnanswered_forwarded, false);
+                mNeedShowAdditionalCallForwardedDialog = false;
             }
         } else if (cause == Connection.DisconnectCause.CALL_BARRED) {
             showGenericErrorDialog(R.string.callFailed_cb_enabled, false);
