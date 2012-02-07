@@ -334,7 +334,7 @@
     <string name="gsm_umts_network_preferneces_summary" msgid="1905018644156819521">"Noch nicht implementiert"</string>
     <string name="gsm_umts_network_preferences_dialogtitle" msgid="6356332580813229898">"GSM-/UMTS-Netzwerkeinstellungen"</string>
     <string-array name="gsm_umts_network_preferences_choices">
-        <item msgid="935612021902787683">"GSM/WCDMA (automatischer)"</item>
+        <item msgid="935612021902787683">"GSM/WCDMA (automatisch)"</item>
         <item msgid="8912042051809329533">"Nur WCDMA"</item>
         <item msgid="8776934131146642662">"Nur GSM"</item>
         <item msgid="4684679567848300935">"GSM/WCDA (WCDMA bevorzugt)"</item>
