@@ -1548,6 +1548,9 @@
     <string name="phone_number_label">My phone number</string>
     <string name="phone_number_summary">Set the phone number for this device</string>
 
+    <string name="show_ssn_label">Event notification</string>
+    <string name="show_ssn_summary">Show a notification for various network events related to call handling</string>
+
     <!-- TrackBall Answer - Added by Nushio -->
     <string name="trackball_answer">Trackball Answer</string>  
     <string name="trackball_answer_sum">Press the Trackball to Answer the incoming phone call.</string>

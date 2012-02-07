@@ -752,6 +752,9 @@
     <string name="phone_number_label">Meine Nummer</string>
     <string name="phone_number_summary">Die Telefonnummer für dieses Gerät einstellen</string>
 
+    <string name="show_ssn_label">Ereignis-Benachrichtigung</string>
+    <string name="show_ssn_summary">Benachrichtigungen für verschiedene Anrufereignisse, z.B. zu Weiterleitungsstatus, anzeigen</string>
+
     <!-- TrackBall Answer and Hangup - Added by Nushio -->
     <string name="trackball_answer">Trackball Annahme</string>
     <string name="trackball_answer_sum">Drücke auf den Trackball, um den eingehenden Anruf anzunehmen</string>

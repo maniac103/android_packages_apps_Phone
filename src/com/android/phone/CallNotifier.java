@@ -31,6 +31,7 @@ import com.android.internal.telephony.gsm.SuppServiceNotification;
 
 import android.app.ActivityManagerNative;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.AsyncResult;
@@ -41,6 +42,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.provider.CallLog;
 import android.provider.CallLog.Calls;
 import android.provider.Settings;
@@ -2071,6 +2073,13 @@ public class CallNotifier extends Handler
     }
 
     private int getSuppServiceToastTextResId(SuppServiceNotification notification) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+
+        if (!prefs.getBoolean(GsmUmtsCallOptions.SHOW_SSN_KEY, true)) {
+            /* don't show anything if the user doesn't want it */
+            return -1;
+        }
+
         if (notification.notificationType == SuppServiceNotification.NOTIFICATION_TYPE_MO) {
             switch (notification.code) {
                 case SuppServiceNotification.MO_CODE_UNCONDITIONAL_CF_ACTIVE :
