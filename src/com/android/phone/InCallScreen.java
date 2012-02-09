@@ -174,6 +174,7 @@ public class InCallScreen extends Activity
     private static final int EVENT_HIDE_PROVIDER_OVERLAY = 121;  // Time to remove the overlay.
     private static final int REQUEST_UPDATE_TOUCH_UI = 122;
     private static final int SUPP_SERVICE_NOTIFY = 123;
+    private static final int REQUEST_UPDATE_CALL_STATE = 124;
 
     //following constants are used for OTA Call
     public static final String ACTION_SHOW_ACTIVATION =
@@ -516,6 +517,10 @@ public class InCallScreen extends Activity
 
                 case REQUEST_UPDATE_TOUCH_UI:
                     updateInCallTouchUi();
+                    break;
+
+                case REQUEST_UPDATE_CALL_STATE:
+                    mCallCard.updateState(mCM);
                     break;
             }
         }
@@ -1773,10 +1778,6 @@ public class InCallScreen extends Activity
                     mNeedShowAdditionalCallForwardedDialog = true;
                 }
             }
-        }
-
-        if (mIsForegroundActivity) {
-            updateScreen();
         }
     }
 
@@ -4365,6 +4366,17 @@ public class InCallScreen extends Activity
      */
     public boolean isIncomingCallTouchUiEnabled() {
         return (mInCallTouchUi != null) && mInCallTouchUi.isIncomingCallTouchUiEnabled();
+    }
+
+    /**
+     * Posts a handler message telling the InCallScreen to update the
+     * call state UI (thus, the CallCard)
+     */
+    /* package */ void requestUpdateCallState() {
+        if (DBG) log("requestUpdateCallState()...");
+
+        mHandler.removeMessages(REQUEST_UPDATE_CALL_STATE);
+        mHandler.sendEmptyMessage(REQUEST_UPDATE_CALL_STATE);
     }
 
     /**
