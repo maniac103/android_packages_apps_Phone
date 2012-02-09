@@ -685,8 +685,13 @@ public class CallCard extends FrameLayout
                         // Display the brief "Hanging up" indication.
                         setUpperTitle(cardTitle, mTextColorDefaultPrimary, state);
                     } else {  // state == Call.State.ACTIVE
-                        // Normal "ongoing call" state; don't use any "title" at all.
-                        clearUpperTitle();
+                        if (mApplication.notifier.isCallHeldRemotely(call)) {
+                            // Show indication that the call is currently waiting
+                            setUpperTitle(cardTitle, mTextColorDefaultPrimary, state);
+                        } else {
+                            // Normal "ongoing call" state; don't use any "title" at all.
+                            clearUpperTitle();
+                        }
                     }
                 }
 
