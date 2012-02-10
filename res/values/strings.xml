@@ -916,10 +916,6 @@
     <string name="call_notif_call_deflected">Call Deflected</string>
     <!-- Toast text for incoming call being forwarded to other remote party  -->
     <string name="call_notif_MTcall_forwarding">Incoming Call is Forwarded</string>
-    <!-- Toast text for incoming call which is answered & then put on hold  -->
-    <string name="call_notif_callonhold">Put on Hold</string>
-    <!-- Toast text for incoming call put on hold & then retreived back -->
-    <string name="call_notif_callretrieved">Call Retreived</string>
     <!-- Toast text for incoming call which is part of MultiParty Call -->
     <string name="call_notif_multipartycall">MultiParty Call</string>
     <!-- Toast text for incoming call which is answered,put on hold & then released -->

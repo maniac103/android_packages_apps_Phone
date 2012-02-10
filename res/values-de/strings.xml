@@ -69,8 +69,6 @@
     <string name="call_notif_clir_suppression_rejected">Unterdrückung der ausgehenden Rufnummer wurde abgewiesen</string>
     <string name="call_notif_call_deflected">Anruf wird von der Gegenseite weitergeleitet</string>
     <string name="call_notif_MTcall_forwarding">Eingehender Anruf wird weitergeleitet</string>
-    <string name="call_notif_callonhold">Anruf wird gehalten</string>
-    <string name="call_notif_callretrieved">Anruf wurde wieder aufgenommen</string>
     <string name="call_notif_multipartycall">Telefonkonferenz</string>
     <string name="call_notif_callonhold_released">Gehaltener Anruf wurde beendet</string>
     <string name="call_notif_forwardcheckreceived">Anruf wurde weitergeleitet</string>

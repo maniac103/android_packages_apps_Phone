@@ -2122,12 +2122,6 @@ public class CallNotifier extends Handler
                     //This message is displayed on B, when A makes call to B, both A & B
                     //belong to a CUG group
                     return R.string.call_notif_cugcall;
-               case SuppServiceNotification.MT_CODE_CALL_ON_HOLD:
-                   //This message is displayed on B,when A makes call to B & puts it on hold
-                   return R.string.call_notif_callonhold;
-               case SuppServiceNotification.MT_CODE_CALL_RETRIEVED:
-                   //This message is displayed on B,when A makes call to B, puts it on hold & retrives it back.
-                   return R.string.call_notif_callretrieved;
                case SuppServiceNotification.MT_CODE_MULTI_PARTY_CALL:
                    //This message is displayed on B when the the call is changed as multiparty
                    return R.string.call_notif_multipartycall;
