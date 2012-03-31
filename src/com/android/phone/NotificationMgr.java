@@ -558,8 +558,13 @@ private static CallFeaturesSetting mSettings;
         // Display the appropriate icon in the status bar,
         // based on the current phone and/or bluetooth state.
 
-        boolean enhancedVoicePrivacy = app.notifier.getCdmaVoicePrivacyState();
-        if (DBG) log("updateInCallNotification: enhancedVoicePrivacy = " + enhancedVoicePrivacy);
+        boolean enhancedVoicePrivacy;
+        if (app.notifier != null) {
+            enhancedVoicePrivacy = app.notifier.getCdmaVoicePrivacyState();
+            if (DBG) log("updateInCallNotification: enhancedVoicePrivacy = " + enhancedVoicePrivacy);
+        } else {
+            enhancedVoicePrivacy = false;
+        }
 
         if (hasRingingCall) {
             // There's an incoming ringing call.
