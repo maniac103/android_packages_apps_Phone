@@ -156,13 +156,13 @@ public class Ringer {
             }
 
             makeLooper();
-            mHandler.removeCallbacksAndMessages(null);
             mRingHandler.removeCallbacksAndMessages(null);
             if (mFirstRingEventTime < 0) {
                 ContentResolver cr = mContext.getContentResolver();
                 boolean increasing = Settings.System.getInt(cr,
                         Settings.System.INCREASING_RING, 0) == 1;
 
+                mHandler.removeCallbacksAndMessages(null);
                 if (increasing) {
                     int minVolume = Settings.System.getInt(cr,
                             Settings.System.INCREASING_RING_MIN_VOLUME, 1);
