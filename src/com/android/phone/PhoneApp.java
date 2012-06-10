@@ -17,8 +17,10 @@
 package com.android.phone;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Application;
 import android.app.KeyguardManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.StatusBarManager;
 import android.bluetooth.BluetoothAdapter;
@@ -35,6 +37,7 @@ import android.net.Uri;
 import android.os.AsyncResult;
 import android.os.Binder;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.IPowerManager;
 import android.os.LocalPowerManager;
@@ -44,6 +47,7 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.os.SystemProperties;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.provider.Settings.System;
 import android.telephony.ServiceState;
@@ -64,10 +68,6 @@ import com.android.internal.telephony.cdma.TtyIntent;
 import com.android.internal.telephony.sip.SipPhoneFactory;
 import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.server.sip.SipService;
-
-import android.os.Vibrator;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 
 /**
  * Top-level Application class for the Phone app.
@@ -237,24 +237,15 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     // add by cytown
     private static final String ACTION_VIBRATE_45 = "com.android.phone.PhoneApp.ACTION_VIBRATE_45";
     private CallFeaturesSetting mSettings;
-    private static PendingIntent mVibrateIntent;
-    private static Vibrator mVibrator = null;
-    private static AlarmManager mAM;
+    private PendingIntent mVibrateIntent;
+    private Vibrator mVibrator;
+    private AlarmManager mAM;
+    private HandlerThread mVibrationThread;
+    private Handler mVibrationHandler;
 
     //for adding to Blacklist from call log 
     private static final String INSERT_BLACKLIST = "com.android.phone.INSERT_BLACKLIST";
 
-    public void startVib45(long callDurationMsec) {
-        if (VDBG) Log.i(LOG_TAG, "vibrate start @" + callDurationMsec);
-        stopVib45();
-        long nextalarm = SystemClock.elapsedRealtime() + ((callDurationMsec > 45000) ? 45000 + 60000 - callDurationMsec : 45000 - callDurationMsec);
-        if (VDBG) Log.i(LOG_TAG, "am at: " + nextalarm);
-        mAM.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, nextalarm, mVibrateIntent);
-    }
-    public void stopVib45() {
-        if (VDBG) Log.i(LOG_TAG, "vibrate stop @" + SystemClock.elapsedRealtime());
-        mAM.cancel(mVibrateIntent);
-    }
     private final class TriVibRunnable implements Runnable {
         private int v1, p1, v2;
         TriVibRunnable(int a, int b, int c) {
@@ -267,8 +258,48 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             if (v2 > 0) mVibrator.vibrate(v2);
         }
     }
+
+    public void start45SecondVibration(long callDurationMsec) {
+        if (VDBG) Log.v(LOG_TAG, "vibrate start @" + callDurationMsec);
+
+        stop45SecondVibration();
+
+        long timer;
+        if (callDurationMsec > 45000) {
+            // Schedule the alarm at the next minute + 45 secs
+            timer = 45000 + 60000 - callDurationMsec;
+        } else {
+            // Schedule the alarm at the first 45 second mark
+            timer = 45000 - callDurationMsec;
+        }
+
+        long nextAlarm = SystemClock.elapsedRealtime() + timer;
+        if (VDBG) Log.v(LOG_TAG, "am at: " + nextAlarm);
+        mAM.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, nextAlarm, mVibrateIntent);
+    }
+
+    public void stop45SecondVibration() {
+        if (VDBG) Log.v(LOG_TAG, "vibrate stop @" + SystemClock.elapsedRealtime());
+        mAM.cancel(mVibrateIntent);
+    }
+
     public void vibrate(int v1, int p1, int v2) {
-        new Handler().post(new TriVibRunnable(v1, p1, v2));
+        if (mVibrationThread == null) {
+            mVibrationThread = new HandlerThread("Vibrate 45 handler");
+            mVibrationThread.start();
+            mVibrationHandler = new Handler(mVibrationThread.getLooper());
+        }
+        mVibrationHandler.post(new TriVibRunnable(v1, p1, v2));
+    }
+
+    public void stopVibrationThread() {
+        stop45SecondVibration();
+
+        mVibrationHandler = null;
+        if (mVibrationThread != null) {
+            mVibrationThread.quit();
+            mVibrationThread = null;
+        }
     }
 
     /**
@@ -601,11 +632,9 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
         // add by cytown
         mSettings = CallFeaturesSetting.getInstance(this);
-        if (mVibrator == null) {
-            mVibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
-            mAM = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-            mVibrateIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_VIBRATE_45), 0);
-        }
+        mVibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+        mAM = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+        mVibrateIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_VIBRATE_45), 0);
 
         // TODO: Register for Cdma Information Records
         // phone.registerCdmaInformationRecord(mHandler, EVENT_UNSOL_CDMA_INFO_RECORD, null);
@@ -1543,12 +1572,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             } else if (action.equals(ACTION_VIBRATE_45)) {
                 if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_VIBRATE_45");
                 mAM.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 60000, mVibrateIntent);
-                if (DBG) Log.i(LOG_TAG, "vibrate on 45 sec");
-                mVibrator.vibrate(70);
-                SystemClock.sleep(70);
-                mVibrator.cancel();
-                if (VDBG) Log.d(LOG_TAG, "mReceiver: force vib cancel");
-                //vibrate(70, 70, -1);
+                vibrate(70, 70, -1);
             } else if (action.equals(Intent.ACTION_DOCK_EVENT)) {
                 mDockState = intent.getIntExtra(Intent.EXTRA_DOCK_STATE,
                         Intent.EXTRA_DOCK_STATE_UNDOCKED);

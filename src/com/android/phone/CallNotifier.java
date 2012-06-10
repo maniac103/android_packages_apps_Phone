@@ -810,15 +810,17 @@ public class CallNotifier extends Handler
             Connection c = PhoneUtils.getConnection(fgPhone, call);
             if (VDBG) PhoneUtils.dumpCallState(fgPhone);
             Call.State cstate = call.getState();
+
             if (cstate == Call.State.ACTIVE && !c.isIncoming()) {
                 long callDurationMsec = c.getDurationMillis();
                 if (VDBG) Log.i(LOG_TAG, "duration is " + callDurationMsec);
+
                 if (mSettings.mVibOutgoing && callDurationMsec < 200) {
                     mApplication.vibrate(100,0,0);
                 }
                 if (mSettings.mVib45) {
                     callDurationMsec = callDurationMsec % 60000;
-                    mApplication.startVib45(callDurationMsec);
+                    mApplication.start45SecondVibration(callDurationMsec);
                 }
             }
 
@@ -1032,9 +1034,7 @@ public class CallNotifier extends Handler
             if (c.getDurationMillis() > 0 && mSettings.mVibHangup) {
                 mApplication.vibrate(50, 100, 50);
             }
-            if (!c.isIncoming()) {
-                mApplication.stopVib45();
-            }
+            mApplication.stopVibrationThread();
         }
 
         // Stop the ringer if it was ringing (for an incoming call that
