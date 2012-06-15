@@ -65,7 +65,7 @@ public class Ringer {
     private Handler mRingHandler;
     private long mFirstRingEventTime = -1;
     private long mFirstRingStartTime = -1;
-    private int mRingerVolumeSetting;
+    private int mRingerVolumeSetting = -1;
     private int mRingIncreaseInterval;
 
     Ringer(Context context) {
