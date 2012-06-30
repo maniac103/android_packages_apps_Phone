@@ -2151,7 +2151,7 @@ public class CallNotifier extends Handler
             }
         }
 
-        mApplication.updateInCallScreenCallState();
+        mApplication.updateInCallScreen();
 
         /* show a toast for transient notifications */
         int toastResId = getSuppServiceToastTextResId(notification);
