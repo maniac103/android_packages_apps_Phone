@@ -2207,10 +2207,13 @@ public class BluetoothHandsfree {
                 if (args.length != 1 || !(args[0] instanceof Integer)) {
                     return new AtCommandResult(AtCommandResult.ERROR);
                 }
-                mScoGain = (Integer) args[0];
-                int flag =  mAudioManager.isBluetoothScoOn() ? AudioManager.FLAG_SHOW_UI:0;
-
-                mAudioManager.setStreamVolume(AudioManager.STREAM_BLUETOOTH_SCO, mScoGain, flag);
+                Integer value = (Integer) args[0];
+                if (value < 0 || value > 15) {
+                    return new AtCommandResult(AtCommandResult.ERROR);
+                }
+                mScoGain = value;
+                mAudioManager.setStreamVolume(AudioManager.STREAM_BLUETOOTH_SCO, mScoGain,
+                        mAudioManager.isBluetoothScoOn() ? AudioManager.FLAG_SHOW_UI : 0);
                 return new AtCommandResult(AtCommandResult.OK);
             }
         });
