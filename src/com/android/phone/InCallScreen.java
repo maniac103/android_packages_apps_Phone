@@ -3060,7 +3060,7 @@ public class InCallScreen extends Activity
     // View.OnLongClickListener implementation
     public boolean onLongClick(View view) {
         int id = view.getId();
-        if (id == R.id.endButton) {
+        if (id == R.id.endButton && mSettings.mEnableBlacklist) {
             Connection c = PhoneUtils.getConnection(mPhone, PhoneUtils.getCurrentCall(mPhone));
             if (c == null)
                 return false; // c can be null from getConnection(), so don't crash below
