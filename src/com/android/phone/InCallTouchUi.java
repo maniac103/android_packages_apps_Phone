@@ -101,8 +101,6 @@ public class InCallTouchUi extends FrameLayout
     private boolean mAllowIncomingCallTouchUi;
     private boolean mAllowInCallTouchUi;
 
-    private CallFeaturesSetting mSettings;
-
     // Look up the various UI elements.
     private boolean mUseRotaryInCall;
     private boolean mUseRingInCall;
@@ -114,13 +112,13 @@ public class InCallTouchUi extends FrameLayout
         if (DBG) log("- this = " + this);
         if (DBG) log("- context " + context + ", attrs " + attrs);
 
+        int layoutResource = PhoneSettings.useLeftHandedLayout(context)
+                ? R.layout.incall_touch_ui_left
+                : R.layout.incall_touch_ui;
+
         // Inflate our contents, and add it (to ourself) as a child.
         LayoutInflater inflater = LayoutInflater.from(context);
-        inflater.inflate(
-                //R.layout.incall_touch_ui,  // resource
-                mSettings.mLeftHand ? R.layout.incall_touch_ui_left : R.layout.incall_touch_ui,  // resource
-                this,                      // root
-                true);
+        inflater.inflate(layoutResource, this, true);
 
         // The various touch UI features are enabled on a per-product
         // basis.  (These flags in config.xml may be overridden by
@@ -132,7 +130,6 @@ public class InCallTouchUi extends FrameLayout
         mAllowInCallTouchUi = getResources().getBoolean(R.bool.allow_in_call_touch_ui);
         if (DBG) log("- regular in-call touch UI: "
                      + (mAllowInCallTouchUi ? "ENABLED" : "DISABLED"));
-        mSettings = CallFeaturesSetting.getInstance(context);
     }
 
     void setInCallScreenInstance(InCallScreen inCallScreen) {
@@ -303,7 +300,7 @@ public class InCallTouchUi extends FrameLayout
                 // it *more* confusing.
             }
         } else {
-            if (mAllowInCallTouchUi || mSettings.mForceTouch) {
+            if (mAllowInCallTouchUi || PhoneSettings.forceTouchUi(getContext())) {
                 // Ok, the in-call touch UI is available on this platform,
                 // so make it visible (with some exceptions):
                 if (mInCallScreen.okToShowInCallTouchUi()) {
@@ -473,8 +470,10 @@ public class InCallTouchUi extends FrameLayout
         // same position onscreen.)
         // This button is totally hidden (rather than just disabled)
         // when the operation isn't available.
-        mHoldButtonContainer.setVisibility(
-                (inCallControlState.canHold && !mSettings.mHideHoldButton) ? View.VISIBLE : View.GONE);
+        boolean showHoldButton = inCallControlState.canHold &&
+                PhoneSettings.hideHoldButton(getContext());
+
+        mHoldButtonContainer.setVisibility(showHoldButton ? View.VISIBLE : View.GONE);
         if (inCallControlState.canHold) {
             // The Hold button icon and label (either "Hold" or "Unhold")
             // depend on the current Hold state.
@@ -540,7 +539,7 @@ public class InCallTouchUi extends FrameLayout
      * "ongoing call" states) on the current device.
      */
     /* package */ boolean isTouchUiEnabled() {
-        return mAllowInCallTouchUi || mSettings.mForceTouch;
+        return mAllowInCallTouchUi || PhoneSettings.forceTouchUi(getContext());
     }
 
     /**

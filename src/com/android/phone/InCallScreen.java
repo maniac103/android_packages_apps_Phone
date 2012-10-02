@@ -545,7 +545,6 @@ public class InCallScreen extends Activity
             }
         };
 
-    private CallFeaturesSetting mSettings;
     private boolean mForceTouch;
 
     //Trackball Answer
@@ -625,8 +624,7 @@ public class InCallScreen extends Activity
             mInCallInitialStatus = InCallInitStatus.SUCCESS;
         }
 
-        mSettings = CallFeaturesSetting.getInstance(this);
-        mForceTouch = mSettings.mForceTouch;
+        mForceTouch = PhoneSettings.forceTouchUi(this);
         // The "touch lock overlay" feature is used only on devices that
         // *don't* use a proximity sensor to turn the screen off while in-call.
         // add by cytown: also turn off if force show the touch keyboard.
@@ -691,7 +689,7 @@ public class InCallScreen extends Activity
         if (DBG) log("onResume()...");
         super.onResume();
 
-        if(mSettings.mRotateIncall) {
+        if (PhoneSettings.allowInCallRotation(this)) {
             this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         }
         else {
@@ -703,9 +701,10 @@ public class InCallScreen extends Activity
         final PhoneApp app = PhoneApp.getInstance();
 
         // add by cytown: if mForceTouch changed, re-init dialpad.
-        if (mForceTouch != mSettings.mForceTouch) {
+        boolean forceTouch = PhoneSettings.forceTouchUi(this);
+        if (mForceTouch != forceTouch) {
             if (DBG) log("Force Touch setting changed, re-init dialpad");
-            mForceTouch = mSettings.mForceTouch;
+            mForceTouch = forceTouch;
             mUseTouchLockOverlay = !app.proximitySensorModeEnabled() && !mForceTouch;
             initDialPad();
         }
@@ -1977,7 +1976,7 @@ public class InCallScreen extends Activity
 
         // Keep track of whether this call was user-initiated or not.
         // (This affects where we take the user next; see delayedCleanupAfterDisconnect().)
-        mShowCallLogAfterDisconnect = !c.isIncoming() && CallFeaturesSetting.getInstance(this).mReturnHome;
+        mShowCallLogAfterDisconnect = !c.isIncoming() && PhoneSettings.showCallLogAfterCall(this);
 
         // We bail out immediately (and *don't* display the "call ended"
         // state at all) in a couple of cases, including those where we
@@ -3060,7 +3059,7 @@ public class InCallScreen extends Activity
     // View.OnLongClickListener implementation
     public boolean onLongClick(View view) {
         int id = view.getId();
-        if (id == R.id.endButton && mSettings.mEnableBlacklist) {
+        if (id == R.id.endButton && PhoneSettings.blacklistEnabled(this)) {
             Connection c = PhoneUtils.getConnection(mPhone, PhoneUtils.getCurrentCall(mPhone));
             if (c == null)
                 return false; // c can be null from getConnection(), so don't crash below
@@ -3089,7 +3088,7 @@ public class InCallScreen extends Activity
         Connection c = PhoneUtils.getConnection(mPhone, PhoneUtils.getCurrentCall(mPhone));
         String number = c.getAddress();
         if (DBG) log("Add to Black List: " + number);
-        PhoneApp.getInstance().getSettings().addBlackList(number);
+        PhoneApp.getInstance().blackList.add(number);
         internalHangup();
     }
 
@@ -5342,74 +5341,54 @@ public class InCallScreen extends Activity
     private void log(String msg) {
         Log.d(LOG_TAG, msg);
     }
-   /**
-    * Adding Trackball Answer & Hangup -- Nushio
-    */
 
-   @Override
-   public boolean onTrackballEvent(MotionEvent event) {
-     mSettings = CallFeaturesSetting.getInstance(this);
-     long realTime = android.os.SystemClock.elapsedRealtime();
-     long downTime = event.getDownTime();
-     if(mCM.hasActiveRingingCall() && !mSettings.mTrackAnswer.equals("-1")){ //Call is ringing and Trackball Answer is on
-	     if(event.getAction() == MotionEvent.ACTION_DOWN){
-	       if(mSettings.mTrackAnswer.equals("dt")){
-		 //Double Tap Code taken from MetalHead's Double-Tap-to-skip-song.
-		 long timeBetweenHits;
-		 if (mTrackballHitTime == null)
-		   mTrackballHitTime = realTime;
-		 else{
-		   if (realTime > mTrackballHitTime)
-		     timeBetweenHits = realTime - mTrackballHitTime; // System clock rolled over
-		   else
-		     timeBetweenHits = realTime + (Long.MAX_VALUE - mTrackballHitTime); // Time to Answer Call
+    private boolean handleTrackballEvent(MotionEvent event, int delay) {
+        long realTime = android.os.SystemClock.elapsedRealtime();
+        long downTime = event.getDownTime();
 
-		   if (timeBetweenHits < 400) { //400 being double-tap duration distance
-		     internalAnswerCall();
-		   }
-		   mTrackballHitTime = null;
-		 }
-	       }
-	     }else if(event.getAction() == MotionEvent.ACTION_UP){
-	       int delay = -1;
-	       try{
-		 delay = Integer.parseInt(mSettings.mTrackAnswer);
-	       }catch(Exception e){}
-	       if(delay > -1){
-		 if(realTime > (downTime + delay))
-		   internalAnswerCall();
-	       }
-	     }
-     }else if(mCM.hasActiveFgCall()  && !mSettings.mTrackHangup.equals("-1")){ //We're in a call and trackbal hangup is enabled
-	if(event.getAction() == MotionEvent.ACTION_DOWN){
-	       if(mSettings.mTrackAnswer.equals("dt")){
-		 //Double Tap Code taken from MetalHead's Double-Tap-to-skip-song.
-		 long timeBetweenHits;
-		 if (mTrackballHitTime == null)
-		   mTrackballHitTime = realTime;
-		 else{
-		   if (realTime > mTrackballHitTime)
-		     timeBetweenHits = realTime - mTrackballHitTime; // System clock rolled over
-		   else
-		     timeBetweenHits = realTime + (Long.MAX_VALUE - mTrackballHitTime); // Time to Answer Call
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            if (delay == 0) {
+                //Double Tap Code taken from MetalHead's Double-Tap-to-skip-song.
+                if (mTrackballHitTime == null) {
+                    mTrackballHitTime = realTime;
+                } else {
+                    long timeBetweenHits;
+                    if (realTime > mTrackballHitTime) {
+                        timeBetweenHits = realTime - mTrackballHitTime; // System clock rolled over
+                    } else {
+                        timeBetweenHits = realTime + (Long.MAX_VALUE - mTrackballHitTime); // Time to Answer Call
+                    }
 
-		   if (timeBetweenHits < 400) { //400 being double-tap duration distance
-		     internalHangup();
-		   }
-		   mTrackballHitTime = null;
-		 }
-	       }
-	     }else if(event.getAction() == MotionEvent.ACTION_UP){
-	       int delay = -1;
-	       try{
-		 delay = Integer.parseInt(mSettings.mTrackAnswer);
-	       }catch(Exception e){}
-	       if(delay > -1){
-		 if(realTime > (downTime + delay))
-		   internalHangup();
-	       }
-	     }
-     }
-     return super.onTrackballEvent(event);
-   }
+                    if (timeBetweenHits < 400) { //400 being double-tap duration distance
+                        return true;
+                    }
+                    mTrackballHitTime = null;
+                }
+            }
+        } else if(event.getAction() == MotionEvent.ACTION_UP) {
+            if (realTime > (downTime + delay)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean onTrackballEvent(MotionEvent event) {
+        int trackballAnswerDelay = PhoneSettings.trackballAnswerDelay(this);
+        int trackballHangupDelay = PhoneSettings.trackballHangupDelay(this);
+
+        if (mCM.hasActiveRingingCall() && trackballAnswerDelay >= 0) { //Call is ringing and Trackball Answer is on
+            if (handleTrackballEvent(event, trackballAnswerDelay)) {
+                internalAnswerCall();
+            }
+        } else if(mCM.hasActiveFgCall()  && trackballHangupDelay >= 0) { //We're in a call and trackball hangup is enabled
+            if (handleTrackballEvent(event, trackballHangupDelay)) {
+                internalHangup();
+            }
+        }
+
+        return super.onTrackballEvent(event);
+    }
 }

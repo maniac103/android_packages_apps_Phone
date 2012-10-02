@@ -139,6 +139,12 @@ class InCallMenu {
         mAddCall.setText(R.string.menu_addCall);
         mAddCall.setIconResource(android.R.drawable.ic_menu_add);
 
+        mAddBlackList = new InCallMenuItemView(wrappedContext);
+        mAddBlackList.setId(R.id.menuAddBlackList);
+        mAddBlackList.setOnClickListener(mInCallScreen);
+        mAddBlackList.setText(R.string.menu_addBlackList);
+        mAddBlackList.setIconResource(R.drawable.ic_menu_add_black);
+
         mSwapCalls = new InCallMenuItemView(wrappedContext);
         mSwapCalls.setId(R.id.menuSwapCalls);
         mSwapCalls.setOnClickListener(mInCallScreen);
@@ -224,13 +230,6 @@ class InCallMenu {
             mInCallMenuView.addItemView(mManageConference, 0);
         }
         mInCallMenuView.addItemView(mShowDialpad, 0);
-
-        // add by cytown
-        mAddBlackList = new InCallMenuItemView(wrappedContext);
-        mAddBlackList.setId(R.id.menuAddBlackList);
-        mAddBlackList.setOnClickListener(mInCallScreen);
-        mAddBlackList.setText(R.string.menu_addBlackList);
-        mAddBlackList.setIconResource(R.drawable.ic_menu_add_black);
         mInCallMenuView.addItemView(mAddBlackList, 0);
 
         // Row 1:
@@ -287,8 +286,10 @@ class InCallMenu {
         final Call.State fgCallState = cm.getActiveFgCallState();
         final boolean hasHoldingCall = cm.hasActiveBgCall();
 
-        mAddBlackList.setVisible(true);
-        mAddBlackList.setEnabled(true);
+        if (PhoneSettings.blacklistEnabled(mInCallMenuView.getContext())) {
+            mAddBlackList.setVisible(true);
+            mAddBlackList.setEnabled(true);
+        }
 
         // For OTA call, only show dialpad, endcall, speaker, and mute menu items
         if (hasActiveCall && TelephonyCapabilities.supportsOtasp(cm.getFgPhone()) &&
@@ -366,45 +367,34 @@ class InCallMenu {
                 } else {
                     throw new IllegalStateException("Unexpected phone type: " + phoneType);
                 }
-
-                mShowDialpad.setVisible(false);
-                mEndCall.setVisible(false);
-                mAddCall.setVisible(false);
-                mSwapCalls.setVisible(false);
-                mMergeCalls.setVisible(false);
-                mBluetooth.setVisible(false);
-                mSpeaker.setVisible(false);
-                mMute.setVisible(false);
-                mHold.setVisible(false);
-
-                // Done updating the individual items.
-                // The last step is to tell the InCallMenuView to update itself
-                // based on any visibility changes that just happened.
-                mInCallMenuView.updateVisibility();
-
-                return true;
-            } else {
-                // If there's an incoming ringing call but there aren't
-                // any "special actions" to take, don't show a menu at all.
-                // add by cytown
+            } else if (mAddBlackList.isVisible()) {
                 mAnswer.setVisible(false);
                 mIgnore.setVisible(false);
                 mAnswerAndHold.setVisible(false);
                 mAnswerAndEnd.setVisible(false);
                 mManageConference.setVisible(false);
-                mShowDialpad.setVisible(false);
-                mEndCall.setVisible(false);
-                mAddCall.setVisible(false);
-                mSwapCalls.setVisible(false);
-                mMergeCalls.setVisible(false);
-                mBluetooth.setVisible(false);
-                mSpeaker.setVisible(false);
-                mMute.setVisible(false);
-                mHold.setVisible(false);
-                mInCallMenuView.updateVisibility();
-                return true;
-                //                return false;
+             } else {
+                // If there's an incoming ringing call but there aren't
+                // any "special actions" to take, don't show a menu at all.
+                return false;
             }
+
+            mShowDialpad.setVisible(false);
+            mEndCall.setVisible(false);
+            mAddCall.setVisible(false);
+            mSwapCalls.setVisible(false);
+            mMergeCalls.setVisible(false);
+            mBluetooth.setVisible(false);
+            mSpeaker.setVisible(false);
+            mMute.setVisible(false);
+            mHold.setVisible(false);
+
+            // Done updating the individual items.
+            // The last step is to tell the InCallMenuView to update itself
+            // based on any visibility changes that just happened.
+            mInCallMenuView.updateVisibility();
+
+            return true;
         }
 
         // TODO: double-check if any items here need to be disabled based on:

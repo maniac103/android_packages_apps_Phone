@@ -19,6 +19,7 @@ package com.android.phone;
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
+import com.android.internal.telephony.CallStateException;
 import com.android.internal.telephony.cdma.CdmaCallWaitingNotification;
 import com.android.internal.telephony.cdma.SignalToneUtil;
 import com.android.internal.telephony.cdma.CdmaInformationRecords.CdmaDisplayInfoRec;
@@ -197,13 +198,10 @@ public class CallNotifier extends Handler
 
     private PowerManager mPowerManager;
 
-    // add by cytown
-    private CallFeaturesSetting mSettings;
     private static final String BLACKLIST = "blacklist";
 
     public CallNotifier(PhoneApp app, Phone phone, Ringer ringer,
                         BluetoothHandsfree btMgr, CallLogAsync callLog) {
-        mSettings = CallFeaturesSetting.getInstance(app);
         //mSensorManager = (SensorManager) app.getSystemService(Context.SENSOR_SERVICE);
         mApplication = app;
         mCM = app.mCM;
@@ -436,12 +434,12 @@ public class CallNotifier extends Handler
         String number = c!=null?c.getAddress():"0000";
         if (android.text.TextUtils.isEmpty(number)) number = "0000";
         if (DBG) log("incoming number is: " + number);
-        if (c != null && mSettings.isBlackList(number)) {
+        if (c != null && mApplication.blackList.isListed(number)) {
             try {
                 c.setUserData(BLACKLIST);
                 c.hangup();
                 if (DBG) Log.i(LOG_TAG, "Reject the incoming call in BL:" + number);
-            } catch (Exception e) {}  // ignore
+            } catch (CallStateException e) {}  // ignore
             return;
         }
 
@@ -524,7 +522,7 @@ public class CallNotifier extends Handler
             startIncomingCallQuery(c);
             //startSensor();
         } else {
-            if (mSettings.mVibCallWaiting) {
+            if (PhoneSettings.vibrateOnCallWaiting(mApplication)) {
                 mApplication.vibrate(200,300,500);
             }
             if (VDBG) log("- starting call waiting tone...");
@@ -815,10 +813,10 @@ public class CallNotifier extends Handler
                 long callDurationMsec = c.getDurationMillis();
                 if (VDBG) Log.i(LOG_TAG, "duration is " + callDurationMsec);
 
-                if (mSettings.mVibOutgoing && callDurationMsec < 200) {
+                if (PhoneSettings.vibrateOnOutgoingCall(mApplication) && callDurationMsec < 200) {
                     mApplication.vibrate(100,0,0);
                 }
-                if (mSettings.mVib45) {
+                if (PhoneSettings.vibrateEvery45Seconds(mApplication)) {
                     callDurationMsec = callDurationMsec % 60000;
                     mApplication.start45SecondVibration(callDurationMsec);
                 }
@@ -1031,7 +1029,7 @@ public class CallNotifier extends Handler
                 if (VDBG) Log.i(LOG_TAG, "in blacklist so skip calllog");
                 return;
             }
-            if (c.getDurationMillis() > 0 && mSettings.mVibHangup) {
+            if (c.getDurationMillis() > 0 && PhoneSettings.vibrateOnHangup(mApplication)) {
                 mApplication.vibrate(50, 100, 50);
             }
             mApplication.stopVibrationThread();

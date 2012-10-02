@@ -120,8 +120,6 @@ public class CallCard extends FrameLayout
     // Cached DisplayMetrics density.
     private float mDensity;
 
-    // add by cytown
-    private CallFeaturesSetting mSettings;
     private TextView mOrganization;
 
     public CallCard(Context context, AttributeSet attrs) {
@@ -139,9 +137,6 @@ public class CallCard extends FrameLayout
                 true);
 
         mApplication = PhoneApp.getInstance();
-
-        // add by cytown
-        mSettings = CallFeaturesSetting.getInstance(context);
 
         mCallTime = new CallTime(this);
 
@@ -1166,9 +1161,10 @@ public class CallCard extends FrameLayout
             mName.setText(R.string.card_title_in_call);
             mOrganization.setVisibility(View.GONE);
         } else {
+            boolean showOrganization = PhoneSettings.showOrganization(mContext);
             mName.setText(displayName);
-            if (DBG) log("show ======= " + updateName + ":" + mSettings.mShowOrgan);
-            if (updateName && mSettings.mShowOrgan) {
+            if (DBG) log("show ======= " + updateName + ":" + showOrganization);
+            if (updateName && showOrganization) {
                 updateOrganization(info.person_id);
             } else {
                 mOrganization.setVisibility(View.GONE);

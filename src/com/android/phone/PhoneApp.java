@@ -151,6 +151,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     Phone phone;
     CallNotifier notifier;
     Ringer ringer;
+    BlackList blackList;
     BluetoothHandsfree mBtHandsfree;
     PhoneInterfaceManager phoneMgr;
     CallManager mCM;
@@ -232,11 +233,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     // Current TTY operating mode selected by user
     private int mPreferredTtyMode = Phone.TTY_MODE_OFF;
 
-    private String mVoiceQualityParam;
-
     // add by cytown
     private static final String ACTION_VIBRATE_45 = "com.android.phone.PhoneApp.ACTION_VIBRATE_45";
-    private CallFeaturesSetting mSettings;
     private PendingIntent mVibrateIntent;
     private Vibrator mVibrator;
     private AlarmManager mAM;
@@ -518,6 +516,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
             ringer = new Ringer(this);
 
+            blackList = new BlackList(this);
+
             // before registering for phone state changes
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
             mWakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK
@@ -567,8 +567,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             mTtyEnabled = getResources().getBoolean(R.bool.tty_enabled);
 
             mIsKeyboardAlwaysOpen = getResources().getBoolean(R.bool.config_device_has_fixed_keyboard);
-
-            mVoiceQualityParam = getResources().getString(R.string.voice_quality_param);
 
             // Register for misc other intent broadcasts.
             IntentFilter intentFilter =
@@ -630,8 +628,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         // start with the default value to set the mute state.
         mShouldRestoreMuteOnInCallResume = false;
 
-        // add by cytown
-        mSettings = CallFeaturesSetting.getInstance(this);
         mVibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
         mAM = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
         mVibrateIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_VIBRATE_45), 0);
@@ -687,10 +683,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
      */
     static Phone getPhone() {
         return getInstance().phone;
-    }
-
-    CallFeaturesSetting getSettings() {
-        return mSettings;
     }
 
     Ringer getRinger() {
@@ -955,8 +947,11 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 // timeout (5s). This ensures that the screen goes to sleep
                 // as soon as acceptably possible after we the wake lock
                 // has been released.
-                //                pokeLockSetting |= LocalPowerManager.POKE_LOCK_SHORT_TIMEOUT;
-                pokeLockSetting |= mSettings.mScreenAwake ? LocalPowerManager.POKE_LOCK_MEDIUM_TIMEOUT : LocalPowerManager.POKE_LOCK_SHORT_TIMEOUT;
+                if (PhoneSettings.keepScreenAwake(this)) {
+                    pokeLockSetting |= LocalPowerManager.POKE_LOCK_MEDIUM_TIMEOUT;
+                } else {
+                    pokeLockSetting |= LocalPowerManager.POKE_LOCK_SHORT_TIMEOUT;
+                }
                 break;
 
             case MEDIUM:
@@ -1125,8 +1120,11 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 // special screen timeout value specific to the in-call
                 // screen, purely to save battery life.
 
-                //                setScreenTimeout(ScreenTimeoutDuration.MEDIUM);
-                setScreenTimeout(mSettings.mScreenAwake ? ScreenTimeoutDuration.DEFAULT : ScreenTimeoutDuration.MEDIUM);
+                if (PhoneSettings.keepScreenAwake(this)) {
+                    setScreenTimeout(ScreenTimeoutDuration.DEFAULT);
+                } else {
+                    setScreenTimeout(ScreenTimeoutDuration.MEDIUM);
+                }
             }
         }
 
@@ -1299,16 +1297,17 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
      */
     /* package */ void updatePhoneState(Phone.State state) {
         if (state != mLastPhoneState) {
-            String voiceQualSetting = mSettings.getVoiceQuality();
-            if (mVoiceQualityParam != null && voiceQualSetting != null) {
-                AudioSystem.setParameters(mVoiceQualityParam + "=" + voiceQualSetting);
+            String voiceQualParam = PhoneSettings.getVoiceQualityParameter(this);
+            if (voiceQualParam != null) {
+                AudioSystem.setParameters(voiceQualParam);
             }
             mLastPhoneState = state;
             updateProximitySensorMode(state);
             if (mAccelerometerListener != null) {
                 // use accelerometer to augment proximity sensor when in call
                 mOrientation = AccelerometerListener.ORIENTATION_UNKNOWN;
-                mAccelerometerListener.enable(!mSettings.mAlwaysProximity &&
+                mAccelerometerListener.enable(
+                        !PhoneSettings.alwaysUseProximitySensor(this) &&
                         state == Phone.State.OFFHOOK);
             }
             // clear our beginning call flag
@@ -1590,9 +1589,9 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 if(ringerMode == AudioManager.RINGER_MODE_SILENT) {
                     notifier.silenceRinger();
                 }
-            }else if (action.equals(INSERT_BLACKLIST)) {
-	    	PhoneApp.getInstance().getSettings().addBlackList(intent.getStringExtra("Insert.BLACKLIST"));
-	    }
+            } else if (action.equals(INSERT_BLACKLIST)) {
+                blackList.add(intent.getStringExtra("Insert.BLACKLIST"));
+            }
         }
     }
 

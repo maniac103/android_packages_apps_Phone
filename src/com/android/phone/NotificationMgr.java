@@ -91,8 +91,6 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
     private boolean mShowingSpeakerphoneIcon;
     private boolean mShowingMuteIcon;
 
-private static CallFeaturesSetting mSettings;
-
     // used to track the missed call counter, default to 0.
     private int mNumberMissedCalls = 0;
 
@@ -120,7 +118,6 @@ private static CallFeaturesSetting mSettings;
 
     NotificationMgr(Context context) {
         mContext = context;
-        mSettings = CallFeaturesSetting.getInstance(context.getApplicationContext());
         mNotificationMgr = (NotificationManager)
             context.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -405,8 +402,8 @@ private static CallFeaturesSetting mSettings;
      * Configures a Notification to emit the blinky green message-waiting/
      * missed-call signal.
      */
-    private static void configureLedNotification(Notification note) {
-        if (mSettings.mLedNotify) {
+    private void configureLedNotification(Notification note) {
+        if (PhoneSettings.ledNotificationEnabled(mContext)) {
             note.flags |= Notification.FLAG_SHOW_LIGHTS;
             note.defaults |= Notification.DEFAULT_LIGHTS;
         }
@@ -740,7 +737,8 @@ if (callDurationMsec > 0) {
             // (rather than just posting a notification to the status bar).
             // Setting fullScreenIntent will cause the InCallScreen to be
             // launched immediately.
-            if (!mSettings.mBgIncall || !wasScreenOn ||
+            if (!PhoneSettings.handleCallInBackground(mContext) ||
+                    !wasScreenOn ||
                     PhoneApp.mDockState == Intent.EXTRA_DOCK_STATE_DESK ||
                     PhoneApp.mDockState == Intent.EXTRA_DOCK_STATE_CAR) {
                 if (DBG) log("- Setting fullScreenIntent: " + inCallPendingIntent);
