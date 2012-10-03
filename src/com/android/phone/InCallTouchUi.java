@@ -471,7 +471,7 @@ public class InCallTouchUi extends FrameLayout
         // This button is totally hidden (rather than just disabled)
         // when the operation isn't available.
         boolean showHoldButton = inCallControlState.canHold &&
-                PhoneSettings.hideHoldButton(getContext());
+                !PhoneSettings.hideHoldButton(getContext());
 
         mHoldButtonContainer.setVisibility(showHoldButton ? View.VISIBLE : View.GONE);
         if (inCallControlState.canHold) {
