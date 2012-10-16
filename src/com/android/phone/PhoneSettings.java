@@ -29,7 +29,7 @@ public class PhoneSettings {
         return getPrefs(context).getBoolean(CallFeaturesSetting.BUTTON_ALWAYS_PROXIMITY, false);
     }
     public static boolean showCallLogAfterCall(Context context) {
-        return !getPrefs(context).getBoolean(CallFeaturesSetting.BUTTON_RETURN_HOME, true);
+        return getPrefs(context).getBoolean(CallFeaturesSetting.BUTTON_RETURN_HOME, true);
     }
     public static boolean ledNotificationEnabled(Context context) {
         return getPrefs(context).getBoolean(CallFeaturesSetting.BUTTON_LED_NOTIFY, true);
