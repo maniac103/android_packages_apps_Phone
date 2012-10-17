@@ -1032,7 +1032,6 @@ public class CallNotifier extends Handler
             if (c.getDurationMillis() > 0 && PhoneSettings.vibrateOnHangup(mApplication)) {
                 mApplication.vibrate(50, 100, 50);
             }
-            mApplication.stopVibrationThread();
         }
 
         // Stop the ringer if it was ringing (for an incoming call that
