@@ -37,7 +37,6 @@ import android.net.Uri;
 import android.os.AsyncResult;
 import android.os.Binder;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.IPowerManager;
 import android.os.LocalPowerManager;
