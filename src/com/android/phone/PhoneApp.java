@@ -17,7 +17,6 @@
 package com.android.phone;
 
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.Application;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
@@ -46,7 +45,6 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.os.SystemProperties;
-import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.provider.Settings.System;
 import android.telephony.ServiceState;
@@ -232,45 +230,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     // Current TTY operating mode selected by user
     private int mPreferredTtyMode = Phone.TTY_MODE_OFF;
 
-    // add by cytown
-    private static final String ACTION_VIBRATE_45 = "com.android.phone.PhoneApp.ACTION_VIBRATE_45";
-    private PendingIntent mVibrateIntent;
-    private Vibrator mVibrator;
-    private AlarmManager mAM;
-
     //for adding to Blacklist from call log 
     private static final String INSERT_BLACKLIST = "com.android.phone.INSERT_BLACKLIST";
-
-    public void start45SecondVibration(long callDurationMsec) {
-        if (VDBG) Log.v(LOG_TAG, "vibrate start @" + callDurationMsec);
-
-        stop45SecondVibration();
-
-        long timer;
-        if (callDurationMsec > 45000) {
-            // Schedule the alarm at the next minute + 45 secs
-            timer = 45000 + 60000 - callDurationMsec;
-        } else {
-            // Schedule the alarm at the first 45 second mark
-            timer = 45000 - callDurationMsec;
-        }
-
-        long nextAlarm = SystemClock.elapsedRealtime() + timer;
-        if (VDBG) Log.v(LOG_TAG, "am at: " + nextAlarm);
-        mAM.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, nextAlarm, mVibrateIntent);
-    }
-
-    public void stop45SecondVibration() {
-        if (VDBG) Log.v(LOG_TAG, "vibrate stop @" + SystemClock.elapsedRealtime());
-        mAM.cancel(mVibrateIntent);
-    }
-
-    public void vibrate(int v1, int p1, int v2) {
-        long[] pattern = new long[] {
-            0, v1, p1, v2
-        };
-        mVibrator.vibrate(pattern, -1);
-    }
 
     /**
      * Set the restore mute state flag. Used when we are setting the mute state
@@ -553,7 +514,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             intentFilter.addAction(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED);
             intentFilter.addAction(TelephonyIntents.ACTION_SERVICE_STATE_CHANGED);
             intentFilter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
-            intentFilter.addAction(ACTION_VIBRATE_45);
             intentFilter.addAction(INSERT_BLACKLIST);
 	    if (mTtyEnabled) {
                 intentFilter.addAction(TtyIntent.TTY_PREFERRED_MODE_CHANGE_ACTION);
@@ -599,10 +559,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
         // start with the default value to set the mute state.
         mShouldRestoreMuteOnInCallResume = false;
-
-        mVibrator = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
-        mAM = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-        mVibrateIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_VIBRATE_45), 0);
 
         // TODO: Register for Cdma Information Records
         // phone.registerCdmaInformationRecord(mHandler, EVENT_UNSOL_CDMA_INFO_RECORD, null);
@@ -1539,11 +1495,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                     Log.e(LOG_TAG, "Error! Emergency Callback Mode not supported for " +
                             phone.getPhoneName() + " phones");
                 }
-            // Vibrate 45 sec receiver add by cytown
-            } else if (action.equals(ACTION_VIBRATE_45)) {
-                if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_VIBRATE_45");
-                mAM.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 60000, mVibrateIntent);
-                vibrate(70, 70, -1);
             } else if (action.equals(Intent.ACTION_DOCK_EVENT)) {
                 mDockState = intent.getIntExtra(Intent.EXTRA_DOCK_STATE,
                         Intent.EXTRA_DOCK_STATE_UNDOCKED);
