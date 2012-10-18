@@ -19,7 +19,6 @@ package com.android.phone;
 import android.app.Activity;
 import android.app.Application;
 import android.app.KeyguardManager;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.StatusBarManager;
 import android.bluetooth.BluetoothAdapter;
