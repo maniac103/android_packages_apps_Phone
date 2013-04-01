@@ -416,6 +416,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     static final String BUTTON_TRACKBALL_ANSWER = "button_trackball_answer_timed";
     static final String BUTTON_TRACKBALL_HANGUP = "button_trackball_hangup_timed";
     static final String BUTTON_HIDE_HOLD_BUTTON = "button_hide_hold_button";
+    static final String BUTTON_REJECTED_AS_MISSED = "button_rejected_as_missed";
     // private static final String BUTTON_TURN_SILENCE     = "button_turn_silence";
     static final String BUTTON_VOICE_QUALITY_KEY = "button_voice_quality_key";
 
@@ -424,6 +425,11 @@ public class CallFeaturesSetting extends PreferenceActivity
     private PreferenceCategory mCatBlackList;
 
     private BlackList mBlackList;
+
+    //Mark rejected calls as missed
+    private static final String BUTTON_REJECTED_AS_MISSED = "button_rejected_as_missed";
+    private CheckBoxPreference mButtonRejectedAsMissed;
+    static boolean mRejectedAsMissed;
 
     private boolean mForeground;
 
@@ -1585,6 +1591,8 @@ public class CallFeaturesSetting extends PreferenceActivity
         if (!TelephonyCapabilities.supportsHoldAndUnhold(mPhone)) {
             advanced.removePreference(hideHoldButton);
         }
+        mButtonRejectedAsMissed = (CheckBoxPreference) prefSet.findPreference(BUTTON_REJECTED_AS_MISSED);
+        mButtonRejectedAsMissed.setChecked(mRejectedAsMissed);
     }
 
     private void createSipCallSettings() {
