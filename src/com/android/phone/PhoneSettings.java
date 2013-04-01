@@ -52,6 +52,9 @@ public class PhoneSettings {
     public static boolean hideHoldButton(Context context) {
         return getPrefs(context).getBoolean(CallFeaturesSetting.BUTTON_HIDE_HOLD_BUTTON, false);
     }
+    public static boolean markRejectedCallsAsMissed(Context context) {
+        return getPrefs(context).getBoolean(CallFeaturesSetting.BUTTON_REJECTED_AS_MISSED, false);
+    }
 
     public static boolean blacklistEnabled(Context context) {
         return getPrefs(context).getBoolean(CallFeaturesSetting.BUTTON_ENABLE_BLACKLIST, false);

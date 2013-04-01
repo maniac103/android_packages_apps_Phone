@@ -426,11 +426,6 @@ public class CallFeaturesSetting extends PreferenceActivity
 
     private BlackList mBlackList;
 
-    //Mark rejected calls as missed
-    private static final String BUTTON_REJECTED_AS_MISSED = "button_rejected_as_missed";
-    private CheckBoxPreference mButtonRejectedAsMissed;
-    static boolean mRejectedAsMissed;
-
     private boolean mForeground;
 
     @Override
@@ -1591,8 +1586,6 @@ public class CallFeaturesSetting extends PreferenceActivity
         if (!TelephonyCapabilities.supportsHoldAndUnhold(mPhone)) {
             advanced.removePreference(hideHoldButton);
         }
-        mButtonRejectedAsMissed = (CheckBoxPreference) prefSet.findPreference(BUTTON_REJECTED_AS_MISSED);
-        mButtonRejectedAsMissed.setChecked(mRejectedAsMissed);
     }
 
     private void createSipCallSettings() {
