@@ -1166,9 +1166,10 @@ public class CallNotifier extends Handler
             // Set the "type" to be displayed in the call log (see constants in CallLog.Calls)
             final int callLogType;
             if (c.isIncoming()) {
-                if (cause == Connection.DisconnectCause.INCOMING_REJECTED) {
+                if (cause == Connection.DisconnectCause.INCOMING_MISSED) {
                     callLogType = Calls.MISSED_TYPE;
-                } else if (PhoneSettings.markRejectedCallsAsMissed(mApplication)) {
+                } else if (cause == Connection.DisconnectCause.INCOMING_REJECTED
+                        && PhoneSettings.markRejectedCallsAsMissed(mApplication)) {
                     callLogType = Calls.MISSED_TYPE;
                 } else {
                     callLogType = Calls.INCOMING_TYPE;
